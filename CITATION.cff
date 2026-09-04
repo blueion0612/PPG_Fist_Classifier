@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+type: software
+title: PPG Fist Classifier
+abstract: >-
+  Open-hand versus clenched-fist detection from the photoplethysmography sensor
+  in a wrist device, with a feature pipeline, leave-one-session-out evaluation
+  and a real-time UDP service.
+authors:
+  - family-names: Lee
+    given-names: Yuhyeon
+    orcid: https://orcid.org/0009-0001-9354-6445
+repository-code: https://github.com/blueion0612/PPG_Classifier
+license: MIT
+keywords:
+  - photoplethysmography
+  - wearable sensing
+  - gesture recognition
+  - biosignal
