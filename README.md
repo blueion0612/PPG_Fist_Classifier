@@ -2,13 +2,17 @@
 
 Yuhyeon Lee · 2025
 
+[![tests](https://github.com/blueion0612/PPG_Classifier/actions/workflows/tests.yml/badge.svg)](https://github.com/blueion0612/PPG_Classifier/actions/workflows/tests.yml)
 [![License](https://img.shields.io/github/license/blueion0612/PPG_Classifier)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![Status](https://img.shields.io/badge/status-research%20code-orange)](#limitations)
 
 [**Results**](#results) · [**Method**](#method) · [**Figures**](docs/figures) · [**Data**](#data)
 
-![Signal chain](docs/figures/hero_pipeline.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/hero_pipeline-dark.png">
+  <img alt="Signal chain: wrist PPG through bandpass, windowing and two model paths to a binary hand state" src="docs/figures/hero_pipeline.png">
+</picture>
 
 **PPG Fist Classifier** detects whether a hand is open or clenched from the
 photoplethysmography sensor already present in a wrist device. No electrodes, no
@@ -32,7 +36,13 @@ Regenerate all of it with `python scripts/report_experiment.py`.
 | Trained and tested within one session | 0.65 | **0.94** |
 | Leave-one-session-out with per-session baseline subtraction | 0.11 | 0.00 |
 
-![Scenario comparison](docs/figures/fig6_scenario_comparison.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/fig6_scenario_comparison-dark.png">
+  <img alt="Bar chart of F1 and AUC across the six evaluation scenarios" src="docs/figures/fig6_scenario_comparison.png">
+</picture>
+
+*F1 and AUC for every scenario in the table. Calibration is what moves the result;
+baseline subtraction is what destroys it.*
 
 **A generic model does not transfer.** Held out from training, a session scores
 0.46 F1. Twenty seconds of labelled data from that same session raises it to 0.73,
@@ -43,7 +53,13 @@ it has seen the wearer.
 runs from 0.14 to 0.70, a five-fold spread around a mean of 0.463. Two sessions
 account for almost all of the loss.
 
-![Per-session performance](docs/figures/fig1_loso_session_performance.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/fig1_loso_session_performance-dark.png">
+  <img alt="Per-session F1 under leave-one-session-out, ranging from 0.14 to 0.70" src="docs/figures/fig1_loso_session_performance.png">
+</picture>
+
+*Per-session F1 with that session held out. The dashed line is the 0.463 mean the
+summary table reports.*
 
 **Baseline subtraction fails.** Subtracting each session's own resting baseline was
 meant to remove the between-session offset. It removes the signal instead: F1 falls
@@ -60,8 +76,21 @@ session was long enough to leave a usable test split.
 survives a change of session, including a change of strap tension. It does not on
 its own establish generalisation to an unseen person.
 
-Confusion matrix, ROC curve, within-session breakdown and the calibration sweep are
-in [`docs/figures/`](docs/figures).
+<details>
+<summary><b>All six figures</b></summary>
+
+| Figure | Shows |
+|---|---|
+| [`fig1_loso_session_performance`](docs/figures/fig1_loso_session_performance.png) | Per-session F1 with that session held out |
+| [`fig2_loso_roc_curve`](docs/figures/fig2_loso_roc_curve.png) | Pooled ROC across all held-out sessions |
+| [`fig3_loso_confusion_matrix`](docs/figures/fig3_loso_confusion_matrix.png) | Pooled confusion matrix, zero-shot |
+| [`fig4_within_session_performance`](docs/figures/fig4_within_session_performance.png) | Per-session F1 when trained on the same session |
+| [`fig5_calibration_curve`](docs/figures/fig5_calibration_curve.png) | F1 and AUC against calibration length |
+| [`fig6_scenario_comparison`](docs/figures/fig6_scenario_comparison.png) | All six scenarios side by side |
+
+Files ending `-dark` are the dark-theme variants the README selects automatically.
+
+</details>
 
 ## Quick start
 
@@ -156,10 +185,26 @@ ppg_classifier/          library and command-line entry points
   realtime.py            UDP service with per-user calibration
 scripts/
   report_experiment.py   reproduces every figure and number in Results
+tests/                   unit tests, no recordings needed
 docs/figures/            result figures and the pipeline diagram
 data/recordings/         raw session CSVs, downloaded, not in git
 models/                  trained models, not in git
 ```
+
+## Tests
+
+Eight tests over synthetic signals, so none of them need the recordings.
+
+```bash
+pytest -q                     # if pytest is installed
+python tests/test_pipeline.py # works without it
+```
+
+They check that the bandpass rejects a 0.05 Hz drift and a 12 Hz tone while passing
+2 Hz, that filtering both ways leaves the peak of a symmetric pulse exactly where it
+was, that band power lands in the band the tone occupies, that a channel yields
+exactly 14 named features, that the factory can build every model type it advertises,
+and that a saved model package reloads and predicts identically.
 
 ## Data
 
@@ -172,9 +217,9 @@ data/recordings/samples_*.csv          normal strap
 data/recordings/tight/samples_*.csv    tight strap
 ```
 
-Requires Python 3.12, NumPy, SciPy, scikit-learn, pandas, joblib, PyTorch and
-Matplotlib. PyTorch is needed only for the report experiment; the deployed
-gradient-boosting path does not use it.
+The library needs NumPy, SciPy, scikit-learn, pandas and joblib. The report
+experiment additionally needs PyTorch and Matplotlib: `pip install -r
+requirements-report.txt`.
 
 ## Limitations
 
