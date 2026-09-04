@@ -45,13 +45,13 @@ Thumbs.db
 *.npz
 *.csv
 
-# Keep these directories but ignore contents
+# Keep the empty directories, ignore what lands in them
 !data/.gitkeep
-!figures/.gitkeep
-!final_models/.gitkeep
-!production_models/.gitkeep
-!ppg_runs/.gitkeep
+!data/recordings/.gitkeep
+!models/.gitkeep
+!docs/figures/.gitkeep
 
-# Claude
+# Figures are committed
+!docs/figures/*.png
+
 .claude/
-nul

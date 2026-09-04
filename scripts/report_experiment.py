@@ -3,13 +3,13 @@
 """
 final_report_experiment.py
 --------------------------
-최종 보고서용 실험 - Figure, 표, 혼동행렬 저장
+Report experiment: produces the figures and result tables
 
-피드백 기반 실험:
-    1. 레이블/Transition 정리 효과
-    2. 캘리브레이션 시나리오 (Zero-shot vs Few-shot vs User-dependent)
-    3. Baseline 대비 피처
-    4. 최종 성능 테이블 및 Figure 생성
+Experiments:
+    1. Effect of label and transition cleaning
+    2. Calibration scenarios (zero-shot, few-shot, user-dependent)
+    3. Baseline-subtracted features
+    4. Final result table and figures
 """
 
 import numpy as np
@@ -37,7 +37,9 @@ plt.rcParams['font.family'] = 'DejaVu Sans'
 plt.rcParams['figure.dpi'] = 150
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-FIGURES_DIR = './figures'
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RECORDINGS_DIR = os.path.join(REPO_ROOT, 'data', 'recordings')
+FIGURES_DIR = os.path.join(REPO_ROOT, 'docs', 'figures')
 os.makedirs(FIGURES_DIR, exist_ok=True)
 
 print(f"Device: {DEVICE}")
@@ -50,7 +52,7 @@ print(f"Figures will be saved to: {FIGURES_DIR}")
 
 def load_ppg_data(csv_paths, key_channels=(1, 5, 7), window_sec=3.0, stride_sec=0.5,
                   fs=25.0, transition_guard_sec=1.0):
-    """PPG 데이터 로드"""
+    """Load and window the recordings."""
     window_size = int(window_sec * fs)
     stride_size = int(stride_sec * fs)
     guard = int(transition_guard_sec * fs)
@@ -62,7 +64,7 @@ def load_ppg_data(csv_paths, key_channels=(1, 5, 7), window_sec=3.0, stride_sec=
     all_labels = []
     all_sessions = []
     all_baselines = []
-    all_indices = []  # 원본 인덱스 저장
+    all_indices = []  # position of each window in its recording
 
     for csv_path in csv_paths:
         df = pd.read_csv(csv_path)
@@ -86,12 +88,12 @@ def load_ppg_data(csv_paths, key_channels=(1, 5, 7), window_sec=3.0, stride_sec=
         for ch in range(data_key.shape[1]):
             data_key[:, ch] = filtfilt(b, a, data_key[:, ch])
 
-        # Baseline (첫 10초)
+        # Baseline from the first 10 seconds
         calib_end = min(int(10 * fs), len(data_key))
         baseline = data_key[:calib_end].mean(axis=0)
         baseline_std = data_key[:calib_end].std(axis=0)
 
-        # 정규화
+        # Normalise
         for ch in range(data_key.shape[1]):
             mean_val = data_key[:calib_end, ch].mean()
             std_val = data_key[:calib_end, ch].std()
@@ -131,7 +133,7 @@ def load_ppg_data(csv_paths, key_channels=(1, 5, 7), window_sec=3.0, stride_sec=
 
 
 def apply_baseline_subtraction(X, baselines):
-    """Baseline 대비 변화량 피처 적용"""
+    """Subtract each recording own baseline from its windows."""
     X_new = X.copy()
     for i in range(len(X)):
         for ch in range(X.shape[2]):
@@ -259,7 +261,7 @@ def evaluate_model(model, test_loader):
 # =============================================================================
 
 def plot_confusion_matrix(y_true, y_pred, title, filename):
-    """혼동행렬 저장"""
+    """Save a confusion matrix figure."""
     cm = confusion_matrix(y_true, y_pred)
     fig, ax = plt.subplots(figsize=(6, 5))
 
@@ -274,7 +276,7 @@ def plot_confusion_matrix(y_true, y_pred, title, filename):
            ylabel='True label',
            xlabel='Predicted label')
 
-    # 숫자 표시
+    # Cell annotations
     thresh = cm.max() / 2.
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
@@ -290,7 +292,7 @@ def plot_confusion_matrix(y_true, y_pred, title, filename):
 
 
 def plot_roc_curve(y_true, y_prob, title, filename):
-    """ROC Curve 저장"""
+    """Save an ROC curve figure."""
     fpr, tpr, _ = roc_curve(y_true, y_prob)
     auc = roc_auc_score(y_true, y_prob)
 
@@ -312,7 +314,7 @@ def plot_roc_curve(y_true, y_prob, title, filename):
 
 
 def plot_precision_recall_curve(y_true, y_prob, title, filename):
-    """Precision-Recall Curve 저장"""
+    """Save a precision-recall curve figure."""
     precision, recall, _ = precision_recall_curve(y_true, y_prob)
 
     fig, ax = plt.subplots(figsize=(6, 5))
@@ -331,14 +333,14 @@ def plot_precision_recall_curve(y_true, y_prob, title, filename):
 
 
 def plot_session_performance(session_metrics, title, filename):
-    """세션별 성능 바 차트"""
+    """Save the per-session F1 bar chart."""
     sessions = list(session_metrics.keys())
     f1_scores = [session_metrics[s]['f1'] for s in sessions]
 
     fig, ax = plt.subplots(figsize=(10, 5))
     bars = ax.bar(sessions, f1_scores, color='steelblue', edgecolor='black')
 
-    # 평균선
+    # Mean line
     avg_f1 = np.mean(f1_scores)
     ax.axhline(y=avg_f1, color='red', linestyle='--', linewidth=2, label=f'Average: {avg_f1:.3f}')
 
@@ -349,7 +351,7 @@ def plot_session_performance(session_metrics, title, filename):
     ax.legend()
     ax.grid(True, alpha=0.3, axis='y')
 
-    # 값 표시
+    # Bar labels
     for bar, f1 in zip(bars, f1_scores):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
                f'{f1:.2f}', ha='center', va='bottom', fontsize=9)
@@ -361,7 +363,7 @@ def plot_session_performance(session_metrics, title, filename):
 
 
 def plot_calibration_curve(calib_results, title, filename):
-    """캘리브레이션 길이 vs 성능 곡선"""
+    """Save the calibration-length sweep figure."""
     calib_lengths = list(calib_results.keys())
     f1_scores = [calib_results[c]['f1'] for c in calib_lengths]
     auc_scores = [calib_results[c]['auc'] for c in calib_lengths]
@@ -384,7 +386,7 @@ def plot_calibration_curve(calib_results, title, filename):
 
 
 def plot_scenario_comparison(scenario_results, filename):
-    """시나리오별 성능 비교"""
+    """Save the scenario comparison figure."""
     scenarios = list(scenario_results.keys())
     f1_scores = [scenario_results[s]['f1'] for s in scenarios]
     auc_scores = [scenario_results[s]['auc'] for s in scenarios]
@@ -405,7 +407,7 @@ def plot_scenario_comparison(scenario_results, filename):
     ax.legend()
     ax.grid(True, alpha=0.3, axis='y')
 
-    # 값 표시
+    # Bar labels
     for bar in bars1:
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
                f'{bar.get_height():.2f}', ha='center', va='bottom', fontsize=8)
@@ -420,7 +422,7 @@ def plot_scenario_comparison(scenario_results, filename):
 
 
 def save_results_table(results_dict, filename):
-    """결과 테이블을 CSV로 저장"""
+    """Write the result table as CSV."""
     df = pd.DataFrame(results_dict).T
     df.to_csv(os.path.join(FIGURES_DIR, filename))
     print(f"  Saved: {filename}")
@@ -438,8 +440,8 @@ def main():
 
     # Load data
     print("\n[1] Loading Data...")
-    normal_files = sorted(glob.glob('./ppg_runs/samples_*.csv'))
-    tight_files = sorted(glob.glob('./ppg_runs/tight/samples_*.csv'))
+    normal_files = sorted(glob.glob(os.path.join(RECORDINGS_DIR, 'samples_*.csv')))
+    tight_files = sorted(glob.glob(os.path.join(RECORDINGS_DIR, 'tight', 'samples_*.csv')))
     all_files = normal_files + tight_files
 
     X, y, sessions, baselines, indices = load_ppg_data(all_files)
@@ -678,17 +680,17 @@ def main():
     print("=" * 80)
     print(f"""
     1. Zero-shot (LOSO): F1 = {all_results.get('LOSO (Zero-shot)', {}).get('f1', 0):.3f}
-       - 새 사용자에 대한 범용 모델 성능
+       - generic model applied to an unseen session
 
     2. User-dependent: F1 = {all_results.get('Within-Session (User-dep)', {}).get('f1', 0):.3f}
-       - 사용자별 모델의 상한선 (Gap: {all_results.get('Within-Session (User-dep)', {}).get('f1', 0) - all_results.get('LOSO (Zero-shot)', {}).get('f1', 0):.3f})
+       - upper bound for a per-session model (gap: {all_results.get('Within-Session (User-dep)', {}).get('f1', 0) - all_results.get('LOSO (Zero-shot)', {}).get('f1', 0):.3f})
 
     3. Few-shot Calibration:
-       - 캘리브레이션 길이에 따른 성능 향상 확인
-       - 제품 요구사항에 맞는 캘리브레이션 시간 결정 가능
+       - performance against calibration length
+       - use this to pick a calibration duration
 
     4. Baseline Subtraction: F1 = {avg_f1_baseline:.3f}
-       - 세션 간 baseline 차이 보정 효과
+       - effect of correcting the per-session baseline
     """)
 
     print(f"\nAll figures saved to: {FIGURES_DIR}/")

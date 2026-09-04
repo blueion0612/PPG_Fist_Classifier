@@ -3,13 +3,13 @@
 """
 model.py
 --------
-PPG Fist Classifier 모델 정의
+Model definitions for the PPG fist classifier
 
-지원 모델:
-    - gb: HistGradientBoostingClassifier (기본, 최고 성능)
+Supported models:
+    - gb: HistGradientBoostingClassifier (default)
     - rf: RandomForestClassifier
-    - xgb: XGBClassifier (선택적)
-    - lgb: LGBMClassifier (선택적)
+    - xgb: XGBClassifier (optional dependency)
+    - lgb: LGBMClassifier (optional dependency)
     - logistic: LogisticRegression
 """
 
@@ -48,7 +48,7 @@ except ImportError:
 
 @dataclass
 class ModelConfig:
-    """모델 설정"""
+    """Model hyperparameters."""
     model_type: str = 'gb'
 
     # Gradient Boosting
@@ -88,11 +88,11 @@ class ModelConfig:
 # =============================================================================
 
 class ModelFactory:
-    """모델 생성 팩토리"""
+    """Builds estimators from a ModelConfig."""
 
     @staticmethod
     def create(config: ModelConfig):
-        """설정에 따라 모델 생성"""
+        """Create an estimator for the given config."""
         model_type = config.model_type
 
         if model_type == 'gb':
@@ -162,7 +162,7 @@ class ModelFactory:
 
     @staticmethod
     def available_models() -> List[str]:
-        """사용 가능한 모델 목록"""
+        """Model types importable in this environment."""
         models = ['gb', 'rf', 'logistic']
         if HAS_XGBOOST:
             models.append('xgb')
@@ -177,7 +177,7 @@ class ModelFactory:
 
 @dataclass
 class ModelPackage:
-    """학습된 모델 패키지"""
+    """A trained model with its scaler and config."""
     model: Any
     scaler: StandardScaler
     config: ModelConfig
@@ -185,17 +185,17 @@ class ModelPackage:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """예측 수행"""
+        """Predict class labels."""
         X_scaled = self.scaler.transform(X)
         return self.model.predict(X_scaled)
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
-        """확률 예측"""
+        """Predict class probabilities."""
         X_scaled = self.scaler.transform(X)
         return self.model.predict_proba(X_scaled)
 
     def save(self, path: str):
-        """모델 저장"""
+        """Save the package to disk."""
         package = {
             'model': self.model,
             'scaler': self.scaler,
@@ -230,7 +230,7 @@ class ModelPackage:
         print(f"Model saved to: {path}")
 
     def _save_config(self, path: Path):
-        """설정 파일 저장"""
+        """Write the config sidecar file."""
         with open(path, 'w', encoding='utf-8') as f:
             f.write("MODEL CONFIGURATION\n")
             f.write("=" * 50 + "\n\n")
@@ -254,7 +254,7 @@ class ModelPackage:
 
     @staticmethod
     def load(path: str) -> 'ModelPackage':
-        """모델 로드"""
+        """Load a package from disk."""
         data = joblib.load(path)
 
         config = ModelConfig(

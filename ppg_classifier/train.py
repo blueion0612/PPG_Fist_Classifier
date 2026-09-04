@@ -3,16 +3,16 @@
 """
 train.py
 --------
-PPG Fist Classifier 모델 학습
+Training for the PPG fist classifier
 
-사용법:
-    python train.py \
+Usage:
+    python -m ppg_classifier.train \
         --data ./data/baseline_all.npz \
         --model gb \
         --learning-rate 0.1 \
         --max-depth 5 \
         --use-smoothing \
-        --output-dir ./production_models
+        --output-dir ./models
 """
 
 import argparse
@@ -22,7 +22,7 @@ from pathlib import Path
 from collections import Counter
 from sklearn.preprocessing import StandardScaler
 
-from model import ModelConfig, ModelFactory, ModelPackage
+from .model import ModelConfig, ModelFactory, ModelPackage
 
 
 # =============================================================================
@@ -30,7 +30,7 @@ from model import ModelConfig, ModelFactory, ModelPackage
 # =============================================================================
 
 def load_data(data_path: str):
-    """NPZ 데이터 로드"""
+    """Load a feature set from an NPZ file."""
     data = np.load(data_path, allow_pickle=True)
 
     X = data['X']
@@ -54,7 +54,7 @@ def load_data(data_path: str):
 # =============================================================================
 
 def train(args):
-    """모델 학습"""
+    """Fit a model on the feature set."""
     print("\n" + "=" * 70)
     print("PPG FIST CLASSIFIER TRAINING")
     print("=" * 70)
@@ -145,7 +145,7 @@ def main():
     # Data
     parser.add_argument("--data", type=str, required=True,
                         help="Path to NPZ data file")
-    parser.add_argument("--output-dir", type=str, default="./production_models",
+    parser.add_argument("--output-dir", type=str, default="./models",
                         help="Output directory")
 
     # Model selection

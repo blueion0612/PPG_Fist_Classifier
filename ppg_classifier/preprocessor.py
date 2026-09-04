@@ -3,11 +3,11 @@
 """
 preprocessor.py
 ---------------
-PPG 신호 전처리 및 특징 추출 모듈
+PPG signal preprocessing and feature extraction
 
-사용법:
-    python preprocessor.py \
-        --runs-glob "./ppg_runs/samples_*.csv" \
+Usage:
+    python -m ppg_classifier.preprocessor \
+        --runs-glob "./data/recordings/samples_*.csv" \
         --out ./data/baseline_all.npz \
         --fs 25.0 --window-sec 3.0 --stride-sec 0.5 \
         --pos-min 0.9 --neg-max 0.1 --guard-sec 1.0
@@ -29,15 +29,15 @@ from typing import List, Dict, Optional, Tuple
 
 @dataclass
 class PreprocessConfig:
-    """전처리 설정"""
-    fs: float = 25.0              # 샘플링 레이트 (Hz)
-    window_sec: float = 3.0       # 윈도우 길이 (초)
-    stride_sec: float = 0.5       # stride (초)
-    pos_min: float = 0.9          # positive 레이블 최소 비율
-    neg_max: float = 0.1          # negative 레이블 최대 비율
-    guard_sec: float = 1.0        # transition guard (초)
-    bp_low: float = 0.5           # bandpass 하한 (Hz)
-    bp_high: float = 10.0         # bandpass 상한 (Hz)
+    """Preprocessing parameters."""
+    fs: float = 25.0              # Sampling rate (Hz)
+    window_sec: float = 3.0       # Window length (s)
+    stride_sec: float = 0.5       # Stride (s)
+    pos_min: float = 0.9          # Minimum positive fraction for a positive window
+    neg_max: float = 0.1          # Maximum positive fraction for a negative window
+    guard_sec: float = 1.0        # Transition guard (s)
+    bp_low: float = 0.5           # Bandpass low cutoff (Hz)
+    bp_high: float = 10.0         # Bandpass high cutoff (Hz)
     bp_order: int = 4             # bandpass filter order
 
     @property
@@ -58,7 +58,7 @@ class PreprocessConfig:
 # =============================================================================
 
 def design_bandpass(fs: float, low: float, high: float, order: int = 4) -> Tuple[np.ndarray, np.ndarray]:
-    """Butterworth bandpass filter 설계"""
+    """Design a Butterworth bandpass filter."""
     nyq = 0.5 * fs
     low_norm = max(0.01, low / nyq)
     high_norm = min(0.99, high / nyq)
@@ -67,12 +67,12 @@ def design_bandpass(fs: float, low: float, high: float, order: int = 4) -> Tuple
 
 
 def apply_bandpass(x: np.ndarray, b: np.ndarray, a: np.ndarray) -> np.ndarray:
-    """Zero-phase bandpass filter 적용"""
+    """Filter forward and backward, so no phase shift is introduced."""
     return filtfilt(b, a, x, axis=0)
 
 
 def compute_bandpower(signal: np.ndarray, fs: float, bands: List[Tuple[float, float]]) -> List[float]:
-    """주파수 대역별 power 계산"""
+    """Integrate signal power over a frequency band."""
     L = len(signal)
     if L == 0:
         return [0.0] * len(bands)
@@ -94,7 +94,7 @@ def compute_bandpower(signal: np.ndarray, fs: float, bands: List[Tuple[float, fl
 # =============================================================================
 
 class FeatureExtractor:
-    """채널당 14개 특징 추출"""
+    """Extract the 14 per-channel features."""
 
     BANDS = [(0.5, 2.5), (2.5, 5.0), (5.0, 10.0)]
     FEATURES_PER_CHANNEL = 14
@@ -102,7 +102,7 @@ class FeatureExtractor:
     @staticmethod
     def extract_channel_features(x: np.ndarray, x_raw: np.ndarray,
                                   fs: float, baseline_raw_mean: float) -> List[float]:
-        """단일 채널에서 14개 특징 추출
+        """Extract 14 features from one channel.
 
         Features:
             Time-domain (6): mean, std, min, max, ptp, rms
@@ -147,7 +147,7 @@ class FeatureExtractor:
 
     @staticmethod
     def get_feature_names(channel_names: List[str]) -> List[str]:
-        """특징 이름 생성"""
+        """Build the feature name list."""
         feature_suffixes = [
             "mean", "std", "min", "max", "ptp", "rms",
             "g_mean", "g_std", "g_rms", "g_abs_mean",
@@ -167,7 +167,7 @@ class FeatureExtractor:
 # =============================================================================
 
 class PPGPreprocessor:
-    """PPG 데이터 전처리 파이프라인"""
+    """End-to-end preprocessing pipeline."""
 
     def __init__(self, config: PreprocessConfig):
         self.config = config
@@ -176,7 +176,7 @@ class PPGPreprocessor:
         )
 
     def process_csv(self, csv_path: str) -> Optional[Dict]:
-        """CSV 파일 처리"""
+        """Process one recording."""
         # Load data
         df = pd.read_csv(csv_path)
 
@@ -287,7 +287,7 @@ class PPGPreprocessor:
         }
 
     def process_multiple(self, csv_paths: List[str]) -> Dict:
-        """여러 CSV 파일 처리 및 병합"""
+        """Process several recordings and concatenate them."""
         all_X, all_y, all_sessions = [], [], []
         feature_names = None
 
@@ -315,7 +315,7 @@ class PPGPreprocessor:
         }
 
     def save(self, data: Dict, output_path: str):
-        """NPZ 파일로 저장"""
+        """Write the feature set to an NPZ file."""
         meta = {
             "fs": self.config.fs,
             "window_sec": self.config.window_sec,

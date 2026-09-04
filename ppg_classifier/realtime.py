@@ -3,16 +3,16 @@
 """
 realtime.py
 -----------
-PPG 실시간 추론 시스템
+Real-time inference for the PPG fist classifier
 
-기능:
-    1. UDP 스트림에서 PPG 데이터 수신
-    2. 실시간 특징 추출 및 예측
-    3. 사용자 캘리브레이션 지원
+Provides:
+    1. Receives PPG samples from a UDP stream
+    2. Extracts features and predicts continuously
+    3. Supports per-user calibration
     4. Temporal Smoothing
 
-사용법:
-    python realtime.py --model ./production_models/final_model_gb.pkl
+Usage:
+    python -m ppg_classifier.realtime --model ./models/final_model_gb.pkl
 """
 
 import argparse
@@ -34,8 +34,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 
-from model import ModelPackage
-from preprocessor import FeatureExtractor
+from .model import ModelPackage
+from .preprocessor import FeatureExtractor
 
 # Windows keyboard input
 try:
@@ -50,7 +50,7 @@ except ImportError:
 # =============================================================================
 
 class PPGUdpListener(threading.Thread):
-    """UDP 스트림 리스너"""
+    """UDP stream listener."""
 
     def __init__(self, bind_ip: str = "0.0.0.0", port: int = 65002, endian: str = "big"):
         super().__init__(daemon=True)
@@ -113,7 +113,7 @@ class PPGUdpListener(threading.Thread):
 # =============================================================================
 
 class RealtimeFeatureExtractor:
-    """실시간 특징 추출기"""
+    """Sliding-window feature extractor."""
 
     def __init__(self, fs: float = 25.0, window_sec: float = 3.0, stride_sec: float = 0.5):
         self.fs = fs
@@ -130,7 +130,7 @@ class RealtimeFeatureExtractor:
         self.calibrated = False
 
     def add_sample(self, values: np.ndarray):
-        """샘플 추가"""
+        """Append one sample."""
         self.buffer.append(values)
         self.sample_count += 1
 
@@ -139,13 +139,13 @@ class RealtimeFeatureExtractor:
             self.buffer = self.buffer[-self.window_size * 2:]
 
     def can_extract(self) -> bool:
-        """특징 추출 가능 여부"""
+        """True once the buffer holds a full window."""
         if len(self.buffer) < self.window_size:
             return False
         return self.sample_count % self.stride == 0
 
     def calibrate(self, stable_samples: list) -> bool:
-        """안정 상태 데이터로 캘리브레이션"""
+        """Set the baseline from resting data."""
         if len(stable_samples) < 10:
             return False
 
@@ -160,7 +160,7 @@ class RealtimeFeatureExtractor:
         return True
 
     def extract_features(self) -> np.ndarray:
-        """현재 윈도우에서 특징 추출"""
+        """Extract features from the current window."""
         if len(self.buffer) < self.window_size:
             return None
 
@@ -191,7 +191,7 @@ class RealtimeFeatureExtractor:
 # =============================================================================
 
 class CalibrationManager:
-    """사용자 캘리브레이션 관리"""
+    """Per-user calibration state."""
 
     def __init__(self, base_model, scaler: StandardScaler):
         self.base_model = base_model
@@ -209,7 +209,7 @@ class CalibrationManager:
         self.active = True
 
     def update(self) -> bool:
-        """레이블 업데이트 (시간 기반)"""
+        """Advance the guided-calibration label."""
         if time.time() - self.switch_time >= self.switch_interval:
             self.current_label = 1 - self.current_label
             self.switch_time = time.time()
@@ -217,17 +217,17 @@ class CalibrationManager:
         return False
 
     def get_remaining_time(self) -> float:
-        """다음 전환까지 남은 시간"""
+        """Seconds until the next label change."""
         return max(0, self.switch_interval - (time.time() - self.switch_time))
 
     def add_sample(self, features: np.ndarray):
-        """캘리브레이션 샘플 추가"""
+        """Add one calibration sample."""
         if self.active and features is not None:
             self.features.append(features)
             self.labels.append(self.current_label)
 
     def train_personal_model(self) -> bool:
-        """개인화 모델 학습"""
+        """Fit the personalised model."""
         n_stable = self.labels.count(0)
         n_fist = self.labels.count(1)
 
@@ -256,7 +256,7 @@ class CalibrationManager:
             return False
 
     def predict(self, features: np.ndarray) -> int:
-        """앙상블 예측"""
+        """Combine the generic and personalised predictions."""
         if features is None:
             return None
 
@@ -275,7 +275,7 @@ class CalibrationManager:
             return int(self.base_model.predict(X_scaled)[0])
 
     def get_stats(self) -> dict:
-        """통계 정보"""
+        """Calibration statistics."""
         return {
             'n_samples': len(self.labels),
             'n_stable': self.labels.count(0),
@@ -290,7 +290,7 @@ class CalibrationManager:
 # =============================================================================
 
 class RealtimeInference:
-    """실시간 추론 시스템"""
+    """Real-time inference system."""
 
     def __init__(self, model_path: str, bind_ip: str = "0.0.0.0", port: int = 65002):
         # Load model
@@ -318,7 +318,7 @@ class RealtimeInference:
         self.inference_mode = False
 
     def start(self):
-        """시스템 시작"""
+        """Start the system."""
         self.listener.start()
 
         # Start display thread
@@ -331,7 +331,7 @@ class RealtimeInference:
         self._main_loop()
 
     def _display_loop(self):
-        """화면 출력"""
+        """Render the console display."""
         while self._running:
             os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -379,7 +379,7 @@ class RealtimeInference:
             time.sleep(0.5)
 
     def _key_loop(self):
-        """키보드 입력"""
+        """Read keyboard input."""
         if HAS_MSVCRT:
             while self._running:
                 if msvcrt.kbhit():
@@ -395,7 +395,7 @@ class RealtimeInference:
                 time.sleep(0.05)
 
     def _handle_key(self, ch: str):
-        """키 입력 처리"""
+        """Handle a key press."""
         if ch == ' ':
             if self.calibration.active:
                 self.calibration.active = False
@@ -418,7 +418,7 @@ class RealtimeInference:
             self._running = False
 
     def _main_loop(self):
-        """메인 처리 루프"""
+        """Main processing loop."""
         print("\n[System started. Waiting for data...]")
 
         initial_buffer = []

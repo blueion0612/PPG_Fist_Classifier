@@ -3,20 +3,20 @@
 """
 evaluate.py
 -----------
-PPG Fist Classifier 성능 평가
+Performance evaluation for the PPG fist classifier
 
-기능:
-    1. 단순 Train/Test 분할 평가
-    2. Leave-One-Session-Out (LOSO) 교차검증
-    3. 상세 성능 리포트 (Accuracy, F1, Precision, Recall, AUC)
-    4. Confusion Matrix 시각화
+Provides:
+    1. Train/test split evaluation
+    2. Leave-One-Session-Out (LOSO) cross-validation
+    3. Metric report (accuracy, F1, precision, recall, AUC)
+    4. Confusion matrix output
 
-사용법:
-    # 단순 평가
-    python evaluate.py --data ./data/baseline_all.npz --model ./production_models/final_model_gb.pkl
+Usage:
+    # Train/test split
+    python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --model ./models/final_model_gb.pkl
 
-    # LOSO 교차검증
-    python evaluate.py --data ./data/baseline_all.npz --loso --model-type gb
+    # LOSO cross-validation
+    python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --loso --model-type gb
 """
 
 import argparse
@@ -35,7 +35,7 @@ from sklearn.metrics import (
     roc_auc_score, confusion_matrix, classification_report
 )
 
-from model import ModelConfig, ModelFactory, ModelPackage
+from .model import ModelConfig, ModelFactory, ModelPackage
 
 
 # =============================================================================
@@ -43,7 +43,7 @@ from model import ModelConfig, ModelFactory, ModelPackage
 # =============================================================================
 
 def load_data(data_path: str) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
-    """NPZ 데이터 로드"""
+    """Load a feature set from an NPZ file."""
     data = np.load(data_path, allow_pickle=True)
 
     X = data['X']
@@ -59,7 +59,7 @@ def load_data(data_path: str) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarr
 
 def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray,
                    y_prob: Optional[np.ndarray] = None) -> Dict[str, float]:
-    """성능 지표 계산"""
+    """Compute classification metrics."""
     metrics = {
         'accuracy': accuracy_score(y_true, y_pred),
         'f1': f1_score(y_true, y_pred, zero_division=0),
@@ -79,7 +79,7 @@ def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray,
 
 
 def print_metrics(metrics: Dict[str, float], title: str = "Performance"):
-    """성능 지표 출력"""
+    """Print the metric summary."""
     print(f"\n{title}")
     print("-" * 40)
     print(f"  Accuracy:  {metrics['accuracy']:.4f}")
@@ -90,7 +90,7 @@ def print_metrics(metrics: Dict[str, float], title: str = "Performance"):
 
 
 def print_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray):
-    """Confusion Matrix 출력"""
+    """Print the confusion matrix."""
     cm = confusion_matrix(y_true, y_pred)
     print("\nConfusion Matrix:")
     print("-" * 40)
@@ -112,7 +112,7 @@ def print_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray):
 # =============================================================================
 
 def evaluate_model(model_path: str, data_path: str, test_size: float = 0.2):
-    """저장된 모델 평가 (Train/Test 분할)"""
+    """Evaluate a saved model on a train/test split."""
     print("\n" + "=" * 70)
     print("MODEL EVALUATION (Train/Test Split)")
     print("=" * 70)
@@ -152,7 +152,7 @@ def evaluate_model(model_path: str, data_path: str, test_size: float = 0.2):
 
 def evaluate_loso(data_path: str, model_type: str = 'gb',
                   learning_rate: float = 0.1, max_depth: int = 5):
-    """Leave-One-Session-Out 교차검증"""
+    """Leave-One-Session-Out cross-validation."""
     print("\n" + "=" * 70)
     print("LEAVE-ONE-SESSION-OUT CROSS-VALIDATION")
     print("=" * 70)
@@ -261,7 +261,7 @@ def evaluate_loso(data_path: str, model_type: str = 'gb',
 
 
 def quick_benchmark(data_path: str):
-    """여러 모델 빠른 벤치마크"""
+    """Benchmark several model types on the same split."""
     print("\n" + "=" * 70)
     print("QUICK MODEL BENCHMARK")
     print("=" * 70)
@@ -358,9 +358,9 @@ def main():
     else:
         print("Please specify --model, --loso, or --benchmark")
         print("\nExamples:")
-        print("  python evaluate.py --data ./data/baseline_all.npz --benchmark")
-        print("  python evaluate.py --data ./data/baseline_all.npz --loso")
-        print("  python evaluate.py --data ./data/baseline_all.npz --model ./production_models/final_model_gb.pkl")
+        print("  python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --benchmark")
+        print("  python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --loso")
+        print("  python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --model ./models/final_model_gb.pkl")
 
 
 if __name__ == "__main__":
