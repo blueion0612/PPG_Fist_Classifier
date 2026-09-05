@@ -1,7 +1,7 @@
 """Make a dark-theme variant of a matplotlib figure that has a white ground.
 
 Only achromatic pixels are touched: white ground becomes near-black, black text
-and axes become light. Coloured pixels (the bars, the ROC line) keep their hue,
+and axes become light. Colored pixels (the bars, the ROC line) keep their hue,
 so the data is untouched.
 """
 import sys
@@ -18,7 +18,7 @@ def darkify(src, dst, sat_thresh=26):
 
     mx = a.max(axis=2)
     mn = a.min(axis=2)
-    achromatic = (mx - mn) < sat_thresh          # grey, white or black
+    achromatic = (mx - mn) < sat_thresh          # gray, white or black
     lum = a.mean(axis=2) / 255.0                 # 1.0 = white ground, 0.0 = ink
 
     # white ground -> DARK_BG, black ink -> LIGHT_INK, linear in between

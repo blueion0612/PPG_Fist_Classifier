@@ -1,4 +1,0 @@
-# Everything the library needs, plus what scripts/report_experiment.py adds
--r requirements.txt
-torch>=1.10.0
-matplotlib>=3.4.0

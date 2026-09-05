@@ -1,0 +1,21 @@
+{
+  "_source": "scripts/report_experiment.py. Values transcribed 2026-09-05 from the 2025 run the README reports, at the precision that run's figures carry. The script writes this file itself on its next run.",
+  "scenarios": {
+    "LOSO (Zero-shot)": {"f1": 0.46, "auc": 0.68},
+    "Within-Session (User-dep)": {"f1": 0.65, "auc": 0.94},
+    "Few-shot (10s)": {"f1": 0.55, "auc": 0.75},
+    "Few-shot (20s)": {"f1": 0.73, "auc": 0.88},
+    "Few-shot (30s)": {"f1": 0.64, "auc": 0.83},
+    "LOSO + Baseline Sub": {"f1": 0.11, "auc": 0.0}
+  },
+  "loso_session_f1": {
+    "samples_000": 0.70,
+    "samples_001": 0.45,
+    "samples_004": 0.54,
+    "samples_100": 0.67,
+    "samples_101": 0.19,
+    "samples_102": 0.14,
+    "samples_103": 0.57
+  },
+  "loso_mean_f1": 0.463
+}

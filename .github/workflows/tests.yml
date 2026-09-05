@@ -19,11 +19,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - run: pip install -r requirements.txt pytest
-      - name: Unit tests
-        run: pytest -q
-      - name: Every entry point resolves
+      - run: pip install -e . pytest
+      - name: Unit tests, and the README numbers against results.json
+        run: python -m pytest -q
+      - name: Every entry point resolves, as a module and as a command
         run: |
           for m in preprocessor train evaluate realtime; do
             python -m ppg_classifier."$m" --help > /dev/null
+          done
+          for c in ppg-preprocess ppg-train ppg-evaluate ppg-realtime; do
+            "$c" --help > /dev/null
           done

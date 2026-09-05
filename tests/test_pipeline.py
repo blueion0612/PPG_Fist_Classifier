@@ -54,13 +54,13 @@ def test_bandpass_is_zero_phase():
     """Filtering both ways leaves no group delay.
 
     A causal filter would move the peak of a symmetric pulse to the right by
-    its group delay. Here it must stay exactly at the centre. Residual
+    its group delay. Here it must stay exactly at the center. Residual
     asymmetry comes from edge padding and is bounded well below the peak.
     """
     b, a = design_bandpass(FS, 0.5, 10.0, order=4)
     n = 201
     x = np.zeros(n)
-    x[n // 2] = 1.0                      # symmetric about its centre
+    x[n // 2] = 1.0                      # symmetric about its center
     y = apply_bandpass(x, b, a)
 
     assert int(np.argmax(np.abs(y))) == n // 2

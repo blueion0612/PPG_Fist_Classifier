@@ -15,6 +15,7 @@ Experiments:
 import numpy as np
 import pandas as pd
 import glob
+import json
 import os
 import warnings
 warnings.filterwarnings('ignore')
@@ -93,7 +94,7 @@ def load_ppg_data(csv_paths, key_channels=(1, 5, 7), window_sec=3.0, stride_sec=
         baseline = data_key[:calib_end].mean(axis=0)
         baseline_std = data_key[:calib_end].std(axis=0)
 
-        # Normalise
+        # Normalize
         for ch in range(data_key.shape[1]):
             mean_val = data_key[:calib_end, ch].mean()
             std_val = data_key[:calib_end, ch].std()
@@ -673,6 +674,17 @@ def main():
 
     # Scenario comparison figure
     plot_scenario_comparison(all_results, 'fig6_scenario_comparison.png')
+
+    # Machine-readable copy of every number the README states. docs/figures/make_hero.py
+    # draws from it and tests/test_readme_numbers.py checks the README against it.
+    with open(os.path.join(FIGURES_DIR, 'results.json'), 'w', encoding='utf-8') as fh:
+        json.dump({
+            '_source': 'scripts/report_experiment.py',
+            'scenarios': {k: {'f1': round(float(v['f1']), 3), 'auc': round(float(v['auc']), 3)}
+                          for k, v in all_results.items()},
+            'loso_session_f1': {str(s): round(float(m['f1']), 3) for s, m in loso_metrics.items()},
+            'loso_mean_f1': round(float(all_results['LOSO (Zero-shot)']['f1']), 3),
+        }, fh, indent=2)
 
     # Summary statistics
     print("\n" + "=" * 80)
