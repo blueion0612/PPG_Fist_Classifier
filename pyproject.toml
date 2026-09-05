@@ -3,7 +3,7 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ppg-classifier"
+name = "ppg-fist-classifier"
 description = "Open-hand versus clenched-fist detection from wrist photoplethysmography"
 readme = "README.md"
 license = "MIT"
@@ -26,20 +26,20 @@ report = ["torch>=1.10", "matplotlib>=3.4"]
 figures = ["matplotlib>=3.4"]
 
 [project.urls]
-Repository = "https://github.com/blueion0612/PPG_Classifier"
+Repository = "https://github.com/blueion0612/PPG_Fist_Classifier"
 Portfolio = "https://blueion0612.github.io"
 
 [project.scripts]
-ppg-preprocess = "ppg_classifier.preprocessor:main"
-ppg-train = "ppg_classifier.train:main"
-ppg-evaluate = "ppg_classifier.evaluate:main"
-ppg-realtime = "ppg_classifier.realtime:main"
+ppg-preprocess = "ppg_fist_classifier.preprocessor:main"
+ppg-train = "ppg_fist_classifier.train:main"
+ppg-evaluate = "ppg_fist_classifier.evaluate:main"
+ppg-realtime = "ppg_fist_classifier.realtime:main"
 
 [tool.setuptools]
-packages = ["ppg_classifier"]
+packages = ["ppg_fist_classifier"]
 
 [tool.setuptools.dynamic]
-version = { attr = "ppg_classifier.__version__" }
+version = { attr = "ppg_fist_classifier.__version__" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

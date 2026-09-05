@@ -6,7 +6,7 @@ train.py
 Training for the PPG fist classifier
 
 Usage:
-    python -m ppg_classifier.train \
+    python -m ppg_fist_classifier.train \
         --data ./data/baseline_all.npz \
         --model gb \
         --learning-rate 0.1 \

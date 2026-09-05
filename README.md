@@ -1,11 +1,11 @@
 <div align="center">
 
-# PPG Fist Classifier
+# PPG Fist Classifier: open hand or clenched fist from a smartwatch's PPG sensor
 
 Yuhyeon Lee · 2025
 
-[![tests](https://img.shields.io/github/actions/workflow/status/blueion0612/PPG_Classifier/tests.yml?branch=main&label=tests)](https://github.com/blueion0612/PPG_Classifier/actions/workflows/tests.yml)
-[![License](https://img.shields.io/github/license/blueion0612/PPG_Classifier)](LICENSE)
+[![tests](https://img.shields.io/github/actions/workflow/status/blueion0612/PPG_Fist_Classifier/tests.yml?branch=main&label=tests)](https://github.com/blueion0612/PPG_Fist_Classifier/actions/workflows/tests.yml)
+[![License](https://img.shields.io/github/license/blueion0612/PPG_Fist_Classifier)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
 [![Status](https://img.shields.io/badge/status-research%20code-orange)](#limitations)
 
@@ -110,8 +110,8 @@ Files ending `-dark` are the dark-theme variants.
 ## Quick start
 
 ```bash
-git clone https://github.com/blueion0612/PPG_Classifier
-cd PPG_Classifier
+git clone https://github.com/blueion0612/PPG_Fist_Classifier
+cd PPG_Fist_Classifier
 pip install -e .
 ```
 
@@ -119,15 +119,15 @@ Put the recordings in `data/recordings/` (see [Data](#data)), then:
 
 ```bash
 # CSV recordings -> windowed feature set
-python -m ppg_classifier.preprocessor \
+python -m ppg_fist_classifier.preprocessor \
     --runs-glob "./data/recordings/samples_*.csv" \
     --out ./data/baseline_all.npz
 
 # train the deployed classifier
-python -m ppg_classifier.train --data ./data/baseline_all.npz --model gb --output-dir ./models
+python -m ppg_fist_classifier.train --data ./data/baseline_all.npz --model gb --output-dir ./models
 
 # leave-one-session-out evaluation
-python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --loso --model-type gb
+python -m ppg_fist_classifier.evaluate --data ./data/baseline_all.npz --loso --model-type gb
 ```
 
 Each module is also installed as a command: `ppg-preprocess`, `ppg-train`,
@@ -180,7 +180,7 @@ Cohen's *d* above 0.5.
 Real-time inference:
 
 ```bash
-python -m ppg_classifier.realtime --model ./models/final_model_gb.pkl --port 65002
+python -m ppg_fist_classifier.realtime --model ./models/final_model_gb.pkl --port 65002
 ```
 
 The service reads 80-byte UDP packets: a four-float header (hour, minute, second,
@@ -191,7 +191,7 @@ calibration sequence, combining it with the generic model.
 Compare model families on one split:
 
 ```bash
-python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --benchmark
+python -m ppg_fist_classifier.evaluate --data ./data/baseline_all.npz --benchmark
 ```
 
 Available model types are `gb`, `rf` and `logistic`, with `xgb` and `lgb` if XGBoost
@@ -200,7 +200,7 @@ or LightGBM are installed.
 ## Repository layout
 
 ```
-ppg_classifier/          library and command-line entry points
+ppg_fist_classifier/          library and command-line entry points
   preprocessor.py        filtering, windowing, feature extraction
   model.py               model configuration, factory, save and load
   train.py               fit a model on a feature set
@@ -283,7 +283,7 @@ Three repositories ask the same question of three wrist signals.
   title   = {PPG Fist Classifier: hand state detection from wrist photoplethysmography},
   year    = {2025},
   version = {1.0.0},
-  url     = {https://github.com/blueion0612/PPG_Classifier},
+  url     = {https://github.com/blueion0612/PPG_Fist_Classifier},
   note    = {Unpublished}
 }
 ```

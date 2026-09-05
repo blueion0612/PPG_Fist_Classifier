@@ -6,7 +6,7 @@ preprocessor.py
 PPG signal preprocessing and feature extraction
 
 Usage:
-    python -m ppg_classifier.preprocessor \
+    python -m ppg_fist_classifier.preprocessor \
         --runs-glob "./data/recordings/samples_*.csv" \
         --out ./data/baseline_all.npz \
         --fs 25.0 --window-sec 3.0 --stride-sec 0.5 \

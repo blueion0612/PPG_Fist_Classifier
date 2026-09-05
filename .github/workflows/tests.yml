@@ -25,7 +25,7 @@ jobs:
       - name: Every entry point resolves, as a module and as a command
         run: |
           for m in preprocessor train evaluate realtime; do
-            python -m ppg_classifier."$m" --help > /dev/null
+            python -m ppg_fist_classifier."$m" --help > /dev/null
           done
           for c in ppg-preprocess ppg-train ppg-evaluate ppg-realtime; do
             "$c" --help > /dev/null

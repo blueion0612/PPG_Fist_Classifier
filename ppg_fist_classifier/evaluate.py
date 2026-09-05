@@ -13,10 +13,10 @@ Provides:
 
 Usage:
     # Train/test split
-    python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --model ./models/final_model_gb.pkl
+    python -m ppg_fist_classifier.evaluate --data ./data/baseline_all.npz --model ./models/final_model_gb.pkl
 
     # LOSO cross-validation
-    python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --loso --model-type gb
+    python -m ppg_fist_classifier.evaluate --data ./data/baseline_all.npz --loso --model-type gb
 """
 
 import argparse
@@ -358,9 +358,9 @@ def main():
     else:
         print("Please specify --model, --loso, or --benchmark")
         print("\nExamples:")
-        print("  python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --benchmark")
-        print("  python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --loso")
-        print("  python -m ppg_classifier.evaluate --data ./data/baseline_all.npz --model ./models/final_model_gb.pkl")
+        print("  python -m ppg_fist_classifier.evaluate --data ./data/baseline_all.npz --benchmark")
+        print("  python -m ppg_fist_classifier.evaluate --data ./data/baseline_all.npz --loso")
+        print("  python -m ppg_fist_classifier.evaluate --data ./data/baseline_all.npz --model ./models/final_model_gb.pkl")
 
 
 if __name__ == "__main__":

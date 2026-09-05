@@ -12,14 +12,14 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ppg_classifier.preprocessor import (  # noqa: E402
+from ppg_fist_classifier.preprocessor import (  # noqa: E402
     PreprocessConfig,
     FeatureExtractor,
     design_bandpass,
     apply_bandpass,
     compute_bandpower,
 )
-from ppg_classifier.model import ModelConfig, ModelFactory, ModelPackage  # noqa: E402
+from ppg_fist_classifier.model import ModelConfig, ModelFactory, ModelPackage  # noqa: E402
 
 FS = 25.0
 

@@ -12,7 +12,7 @@ Provides:
     4. Temporal Smoothing
 
 Usage:
-    python -m ppg_classifier.realtime --model ./models/final_model_gb.pkl
+    python -m ppg_fist_classifier.realtime --model ./models/final_model_gb.pkl
 """
 
 import argparse
