@@ -188,6 +188,10 @@ nanosecond) followed by 16 `int32` channel values. It holds a rolling 3 s buffer
 predicts at the stride rate, and can fit a per-user model on the fly from a guided
 calibration sequence, combining it with the generic model.
 
+The deployed model, `final_model_gb.pkl`, is not in the repository. It is sent on
+request by email (yuhyunkorea@gmail.com), or `train.py` fits a new one from the
+recordings described under Data.
+
 Compare model families on one split:
 
 ```bash
@@ -215,7 +219,7 @@ docs/figures/
   figstyle.py            the palette every repository under this account shares
   fig*.png               raw output of the experiment script, light and dark
 data/recordings/         raw session CSVs, downloaded, not in git
-models/                  trained models, not in git
+models/                  trained models, not in git; the deployed one is sent on request
 pyproject.toml           package definition, dependencies, console scripts
 ```
 
